@@ -19,12 +19,32 @@ NavigationPane {
     id: navPane
     Page {
         id: myPage
-        property int barHeight: 900
+        property int barHeight: 1200
+        onBarHeightChanged: {
+            if(max > 0){
+                calculateBarChart()
+            }
+        }
         property variant colorJSON: Color.DarkGreen
         property variant colorXML: Color.Red
+        property int max: -1
+        property int readJson: 0
+        property int writeJson: 0
+        property int readXml: 0
+        property int writeXml: 0
         titleBar: TitleBar {
             title: "Speed Test JSON vs XML"
+            scrollBehavior: TitleBarScrollBehavior.Sticky
         }
+        attachedObjects: [
+            OrientationHandler {
+                onOrientationChanged: {
+                    if (orientation == UIOrientation.Portrait){
+                        valueContainer.preferredHeight = 1200
+                    }
+                }
+            }
+        ]
         actions: [
             ActionItem {
                 title: "Convert Speaker"
@@ -135,6 +155,15 @@ NavigationPane {
                 layout: StackLayout {
                     orientation: LayoutOrientation.LeftToRight
                 }
+                attachedObjects: [
+                    LayoutUpdateHandler {
+                        id: valueContainerLayoutHandler
+                        onLayoutFrameChanged: {
+                            myPage.barHeight = layoutFrame.height
+                            console.log("BAR HEIGHT: "+myPage.barHeight)
+                        }
+                    }
+                ]
                 Container {
                     id: readJSONValue
                     background: myPage.colorJSON
@@ -181,6 +210,7 @@ NavigationPane {
                 layout: StackLayout {
                     orientation: LayoutOrientation.LeftToRight
                 }
+                bottomPadding: 10
                 Label {
                     id: readJsonValueLabel
                     text: "0"
@@ -188,6 +218,7 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: myPage.colorJSON
+                    textStyle.fontSize: FontSize.Small
                 }
                 Label {
                     id: readXmlValueLabel
@@ -196,6 +227,7 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: myPage.colorXML
+                    textStyle.fontSize: FontSize.Small
                 }
                 Label {
                     id: writeJsonValueLabel
@@ -204,6 +236,7 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: myPage.colorJSON
+                    textStyle.fontSize: FontSize.Small
                 }
                 Label {
                     id: writeXmlValueLabel
@@ -212,10 +245,19 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: myPage.colorXML
+                    textStyle.fontSize: FontSize.Small
                 }
             } // end labelBottomContainer
         } // outerContainer
         function compareValues(max, readJson, writeJson, readXml, writeXml) {
+            myPage.max = max
+            myPage.readJson = readJson
+            myPage.writeJson = writeJson
+            myPage.readXml = readXml
+            myPage.writeXml = writeXml
+            calculateBarChart()
+        }
+        function calculateBarChart(){
             readJSONValue.preferredHeight = barHeight / max * readJson
             writeJSONValue.preferredHeight = barHeight / max * writeJson
             readXMLValue.preferredHeight = barHeight / max * readXml
