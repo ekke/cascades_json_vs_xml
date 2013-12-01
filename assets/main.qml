@@ -29,7 +29,7 @@ NavigationPane {
     attachedObjects: [
         SystemToast {
             id: infoToast
-            icon: "asset:///images/stop_watch.png"
+            icon: "asset:///images/ca_software_updates.png"
             body: "Read/Write 10'000 Addresses: up to 2 Min"
             button.label: "Please Wait ..."
             button.enabled: true
@@ -111,6 +111,8 @@ NavigationPane {
                 onTriggered: {
                     navPane.running = true
                     infoToast.body = "See results using Target File System Navigator"
+                    infoToast.button.label = "Please Wait ..."
+                    infoToast.icon = "asset:///images/ca_software_updates.png"
                     infoToast.show()
                     myTimer.usecase = 2
                     activityIndicator.start()
@@ -124,6 +126,8 @@ NavigationPane {
                 onTriggered: {
                     navPane.running = true
                     infoToast.body = "See results using Target File System Navigator"
+                    infoToast.button.label = "Please Wait ..."
+                    infoToast.icon = "asset:///images/ca_software_updates.png"
                     infoToast.show()
                     myTimer.usecase = 3
                     activityIndicator.start()
@@ -137,6 +141,8 @@ NavigationPane {
                 onTriggered: {
                     navPane.running = true
                     infoToast.body = "See results using Target File System Navigator"
+                    infoToast.button.label = "Please Wait ..."
+                    infoToast.icon = "asset:///images/ca_software_updates.png"
                     infoToast.show()
                     myTimer.usecase = 4
                     activityIndicator.start()
@@ -152,6 +158,8 @@ NavigationPane {
                 onTriggered: {
                     navPane.running = true
                     infoToast.body = "Read/Write 10'000 Addresses: up to 2 Min"
+                    infoToast.button.label = "Please Wait ..."
+                    infoToast.icon = "asset:///images/ca_software_updates.png"
                     infoToast.show()
                     myTimer.usecase = 0
                     activityIndicator.start()
@@ -168,6 +176,8 @@ NavigationPane {
                     var page = measureSpeakerPageComponent.createObject(navPane)
                     navPane.push(page)
                     infoToast.body = "Read/Write/Convert 119 Speakers"
+                    infoToast.button.label = "Please Wait ..."
+                    infoToast.icon = "asset:///images/ca_software_updates.png"
                     infoToast.show()
                     myTimer.usecase = 1
                     activityIndicator.start()
@@ -388,19 +398,37 @@ NavigationPane {
         navPane.running = false
         switch (myTimer.usecase) {
             case 0:
-                // nothing to do - we have the bars
+                infoToast.body = "10'000 Addresses processed.\nread JSON up to 30 times faster then read XML"
+                infoToast.button.label = "OK"
+                infoToast.icon = "asset:///images/ca_done.png"
+                infoToast.exec()
                 return
             case 1:
-                // nothing to do - we have the bars
+                infoToast.body = "119 Speaker processed.\nJSON v2:\nelements not needed -> removed"
+                infoToast.button.label = "OK"
+                infoToast.icon = "asset:///images/ca_done.png"
+                infoToast.exec()
                 return
             case 2:
                 // app.convertXMLtoJSONspeaker()
+                infoToast.body = "Data converted. see TargetFileSystemNavigator /data"
+                infoToast.button.label = "OK"
+                infoToast.icon = "asset:///images/ca_done.png"
+                infoToast.exec()
                 return
             case 3:
                 // app.convertXMLtoJSONAddresses()
+                infoToast.body = "Data converted. see TargetFileSystemNavigator /data"
+                infoToast.button.label = "OK"
+                infoToast.icon = "asset:///images/ca_done.png"
+                infoToast.exec()
                 return
             case 4:
                 // app.convertJSONtoXMLAddresses()
+                infoToast.body = "Data converted. see TargetFileSystemNavigator /data"
+                infoToast.button.label = "OK"
+                infoToast.icon = "asset:///images/ca_done.png"
+                infoToast.exec()
                 return
             default:
                 return
