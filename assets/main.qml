@@ -16,17 +16,20 @@
 
 import bb.cascades 1.2
 import bb.system 1.2
+import my.library 1.0
 
 NavigationPane {
     id: navPane
     // color - creation is expensive
-    // so colors should be re-used 
+    // so colors should be re-used
     property variant colorJSON: Color.DarkGreen
     property variant colorJSONc: Color.Magenta
     property variant colorXML: Color.Red
+    property bool running: false
     attachedObjects: [
-        SystemProgressToast {
-            id: progressDialog
+        SystemToast {
+            id: infoToast
+            icon: "asset:///images/stop_watch.png"
             body: "Read/Write 10'000 Addresses: up to 2 Min"
             button.label: "Please Wait ..."
             button.enabled: true
@@ -34,6 +37,33 @@ NavigationPane {
         ComponentDefinition {
             id: measureSpeakerPageComponent
             source: "MeasureSpeakerPage.qml"
+        },
+        QTimer {
+            id: myTimer
+            property int usecase
+            interval: 100
+            singleShot: true
+            onTimeout: {
+                switch (myTimer.usecase) {
+                    case 0:
+                        app.compareJSONandXMLaddresses()
+                        return
+                    case 1:
+                        app.compareJSONandXMLspeaker()
+                        return
+                    case 2:
+                        app.convertXMLtoJSONspeaker()
+                        return
+                    case 3:
+                        app.convertXMLtoJSONAddresses()
+                        return
+                    case 4:
+                        app.convertJSONtoXMLAddresses()
+                        return
+                    default:
+                        return
+                }
+            }
         }
     ]
     Page {
@@ -43,7 +73,7 @@ NavigationPane {
         onBarHeightChanged: {
             // if the available height changes we have to recalculate
             // if there are already values
-            if(max > 0){
+            if (max > 0) {
                 calculateBarChart()
             }
         }
@@ -62,7 +92,7 @@ NavigationPane {
         attachedObjects: [
             OrientationHandler {
                 onOrientationChanged: {
-                    if (orientation == UIOrientation.Portrait){
+                    if (orientation == UIOrientation.Portrait) {
                         // setting the preffered height to a high number
                         // will cause the LayoutUpdateHandler to change the height
                         // if coming from Landscape
@@ -76,54 +106,72 @@ NavigationPane {
         actions: [
             ActionItem {
                 title: "Convert Speaker"
+                enabled: ! navPane.running
                 ActionBar.placement: ActionBarPlacement.InOverflow
                 onTriggered: {
-                    progressDialog.body = "See results using Target File System Navigator"
-                    progressDialog.show()
-                    app.convertXMLtoJSONspeaker()
-                    navPane.cancelProgress()
+                    navPane.running = true
+                    infoToast.body = "See results using Target File System Navigator"
+                    infoToast.show()
+                    myTimer.usecase = 2
+                    activityIndicator.start()
+                    myTimer.start()
                 }
             },
             ActionItem {
                 title: "Convert Addresses X2J"
+                enabled: ! navPane.running
                 ActionBar.placement: ActionBarPlacement.InOverflow
                 onTriggered: {
-                    progressDialog.body = "See results using Target File System Navigator"
-                    progressDialog.show()
-                    app.convertXMLtoJSONAddresses()
-                    navPane.cancelProgress()
+                    navPane.running = true
+                    infoToast.body = "See results using Target File System Navigator"
+                    infoToast.show()
+                    myTimer.usecase = 3
+                    activityIndicator.start()
+                    myTimer.start()
                 }
             },
             ActionItem {
                 title: "Convert Addresses J2X"
+                enabled: ! navPane.running
                 ActionBar.placement: ActionBarPlacement.InOverflow
                 onTriggered: {
-                    progressDialog.body = "See results using Target File System Navigator"
-                    progressDialog.show()
-                    app.convertJSONtoXMLAddresses()
-                    navPane.cancelProgress()
+                    navPane.running = true
+                    infoToast.body = "See results using Target File System Navigator"
+                    infoToast.show()
+                    myTimer.usecase = 4
+                    activityIndicator.start()
+                    myTimer.start()
                 }
             },
             ActionItem {
+                id: me
                 title: "Measure Addresses"
+                enabled: ! navPane.running
                 imageSource: "asset:///images/stop_watch.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
                 onTriggered: {
-                    progressDialog.body = "Read/Write 10'000 Addresses: up to 2 Min"
-                	progressDialog.show()
-                    app.compareJSONandXMLaddresses()
+                    navPane.running = true
+                    infoToast.body = "Read/Write 10'000 Addresses: up to 2 Min"
+                    infoToast.show()
+                    myTimer.usecase = 0
+                    activityIndicator.start()
+                    myTimer.start()
                 }
             },
             ActionItem {
                 title: "Measure Speaker"
+                enabled: ! navPane.running
                 imageSource: "asset:///images/speaker.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
                 onTriggered: {
+                    navPane.running = true
                     var page = measureSpeakerPageComponent.createObject(navPane)
                     navPane.push(page)
-                    progressDialog.body = "Read/Write/Convert 119 Speakers"
-                    progressDialog.show()
-                    app.compareJSONandXMLspeaker()
+                    infoToast.body = "Read/Write/Convert 119 Speakers"
+                    infoToast.show()
+                    myTimer.usecase = 1
+                    activityIndicator.start()
+                    myTimer.start()
                 }
             }
         ] // end actions
@@ -134,6 +182,20 @@ NavigationPane {
             layout: StackLayout {
                 orientation: LayoutOrientation.TopToBottom
             }
+            ActivityIndicator {
+                id: activityIndicator
+            }
+            attachedObjects: [
+                LayoutUpdateHandler {
+                    id: outerContainerLayoutHandler
+                    onLayoutFrameChanged: {
+                        // this will trigger the valueContainerLayoutHandler
+                        // to get all available space
+                        // per ex. after stopping the ActivityIndicator 
+                        valueContainer.preferredHeight = 1200
+                    }
+                }
+            ]
             Container {
                 id: labelHeaderContainer
                 layout: StackLayout {
@@ -203,7 +265,7 @@ NavigationPane {
                         id: valueContainerLayoutHandler
                         onLayoutFrameChanged: {
                             measureAddressesPage.barHeight = layoutFrame.height
-                            console.log("BAR HEIGHT: "+measureAddressesPage.barHeight)
+                            console.log("BAR HEIGHT: " + measureAddressesPage.barHeight)
                         }
                     }
                 ]
@@ -302,9 +364,9 @@ NavigationPane {
             measureAddressesPage.writeXml = writeXml
             // now calculate the height of the Containers representing a Bar
             calculateBarChart()
-            navPane.cancelProgress()
+            navPane.processFinished()
         }
-        function calculateBarChart(){
+        function calculateBarChart() {
             readJSONValue.preferredHeight = barHeight / max * readJson
             writeJSONValue.preferredHeight = barHeight / max * writeJson
             readXMLValue.preferredHeight = barHeight / max * readXml
@@ -318,12 +380,36 @@ NavigationPane {
             // connect the signal from C++ with the QML function
             app.speedTestAddresses.connect(compareValues)
         }
-    }    // end page
+    } // end page
     // cancels the progress, also called from pushed Page
-    function cancelProgress(){
-        progressDialog.cancel()
+    function processFinished() {
+        infoToast.cancel()
+        activityIndicator.stop()
+        navPane.running = false
+        switch (myTimer.usecase) {
+            case 0:
+                // nothing to do - we have the bars
+                return
+            case 1:
+                // nothing to do - we have the bars
+                return
+            case 2:
+                // app.convertXMLtoJSONspeaker()
+                return
+            case 3:
+                // app.convertXMLtoJSONAddresses()
+                return
+            case 4:
+                // app.convertJSONtoXMLAddresses()
+                return
+            default:
+                return
+        }
     }
     onPopTransitionEnded: {
         page.destroy()
+    }
+    onCreationCompleted: {
+        app.conversionDone.connect(processFinished)
     }
 }// end navPane

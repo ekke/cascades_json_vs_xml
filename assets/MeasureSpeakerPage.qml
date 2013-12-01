@@ -176,7 +176,7 @@ Page {
         measureSpeakerPage.readConvertedJson = readConvertedJson
         // now calculate the height of the Containers representing a Bar
         calculateBarChart()
-        navPane.cancelProgress()
+        navPane.processFinished()
     }
     
     function calculateBarChart(){

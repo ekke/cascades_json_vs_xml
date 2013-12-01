@@ -61,17 +61,15 @@ public:
 signals:
 	void speedTestAddresses(int max, int readJson, int writeJson, int readXml, int writeXml);
 	void speedTestSpeaker(int max, int readXml, int readJson, int readConvertedJson);
-
+	void conversionDone();
 private slots:
     void onSystemLanguageChanged();
-
-    void convertSpeaker(QVariant& data);
 
 private:
     QTranslator* m_pTranslator;
     bb::cascades::LocaleHandler* m_pLocaleHandler;
 
-    void copyAssetsToData();
+    void convertSpeaker(QVariant& data);
 };
 
 #endif /* ApplicationUI_HPP_ */

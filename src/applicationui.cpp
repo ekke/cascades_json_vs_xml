@@ -24,6 +24,8 @@
 #include <bb/data/JsonDataAccess>
 #include <bb/data/XmlDataAccess>
 
+#include <QTimer>
+
 static QString dataPath(const QString& fileName) {
 	return QDir::currentPath() + "/data/" + fileName;
 }
@@ -50,12 +52,16 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app) :
 			SLOT(onSystemLanguageChanged()));
 	// This is only available in Debug builds
 	Q_ASSERT(res);
+
 	// Since the variable is not used in the app, this is added to avoid a
 	// compiler warning
 	Q_UNUSED(res);
 
 	// initial load
 	onSystemLanguageChanged();
+
+	// QTimer
+	qmlRegisterType<QTimer>("my.library", 1, 0, "QTimer");
 
 	// Create scene document from main.qml asset, the parent is set
 	// to ensure the document gets destroyed properly at shut down.
@@ -79,10 +85,6 @@ void ApplicationUI::onSystemLanguageChanged() {
 	if (m_pTranslator->load(file_name, "app/native/qm")) {
 		QCoreApplication::instance()->installTranslator(m_pTranslator);
 	}
-}
-
-void ApplicationUI::copyAssetsToData() {
-
 }
 
 void ApplicationUI::compareJSONandXMLspeaker() {
@@ -188,6 +190,7 @@ void ApplicationUI::convertJSONtoXMLAddresses() {
 	XmlDataAccess xda;
 	xda.save(data, dataPath(filenameXML));
 	qDebug() << "finished converting";
+	emit conversionDone();
 }
 
 void ApplicationUI::convertXMLtoJSONAddresses() {
@@ -214,6 +217,7 @@ void ApplicationUI::convertXMLtoJSONAddresses() {
 	JsonDataAccess jda;
 	jda.save(data, dataPath(filenameJSON));
 	qDebug() << "finished converting";
+	emit conversionDone();
 }
 
 void ApplicationUI::convertXMLtoJSONspeaker() {
@@ -242,6 +246,7 @@ void ApplicationUI::convertXMLtoJSONspeaker() {
 	filenameJSON = "speakerlist.json";
 	jda.save(data, dataPath(filenameJSON));
 	qDebug() << "finished converting speaker";
+	emit conversionDone();
 }
 
 void ApplicationUI::convertSpeaker(QVariant& data) {
