@@ -52,14 +52,15 @@ public:
 	void convertJSONtoXMLAddresses();
 
     Q_INVOKABLE
-    void compareJSONandXML();
+    void compareJSONandXMLaddresses();
 
     Q_INVOKABLE
 	void compareJSONandXMLspeaker();
 
     virtual ~ApplicationUI() { }
 signals:
-	void speedTest(int max, int readJson, int writeJson, int readXml, int writeXml);
+	void speedTestAddresses(int max, int readJson, int writeJson, int readXml, int writeXml);
+	void speedTestSpeaker(int max, int readXml, int readJson, int readConvertedJson);
 
 private slots:
     void onSystemLanguageChanged();

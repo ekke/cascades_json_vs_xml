@@ -19,16 +19,25 @@ import bb.system 1.2
 
 NavigationPane {
     id: navPane
+    // color - creation is expensive
+    // so colors should be re-used 
+    property variant colorJSON: Color.DarkGreen
+    property variant colorJSONc: Color.Magenta
+    property variant colorXML: Color.Red
     attachedObjects: [
         SystemProgressToast {
             id: progressDialog
-            body: "Read/Write 10'000 Addresses. Can take up to 2 Min"
+            body: "Read/Write 10'000 Addresses: up to 2 Min"
             button.label: "Please Wait ..."
             button.enabled: true
+        },
+        ComponentDefinition {
+            id: measureSpeakerPageComponent
+            source: "MeasureSpeakerPage.qml"
         }
     ]
     Page {
-        id: myPage
+        id: measureAddressesPage
         // we start with a high value to let Cascades adjust this via LayoutUpdateHandler
         property int barHeight: 1200
         onBarHeightChanged: {
@@ -38,10 +47,6 @@ NavigationPane {
                 calculateBarChart()
             }
         }
-        // color - creation is expensive
-        // so colors should be re-used 
-        property variant colorJSON: Color.DarkGreen
-        property variant colorXML: Color.Red
         // store the last values to be able to re-calculate the height of bars if available space changes
         property int max: -1
         property int readJson: 0
@@ -49,7 +54,7 @@ NavigationPane {
         property int readXml: 0
         property int writeXml: 0
         titleBar: TitleBar {
-            title: "Speed Test JSON vs XML"
+            title: "Speed Test JSON vs XML (Addresses)"
             // we want to see the value bars withour scrolling on Q10
             // so we have to set the title bar sticky
             scrollBehavior: TitleBarScrollBehavior.Sticky
@@ -76,7 +81,7 @@ NavigationPane {
                     progressDialog.body = "See results using Target File System Navigator"
                     progressDialog.show()
                     app.convertXMLtoJSONspeaker()
-                    progressDialog.cancel()
+                    navPane.cancelProgress()
                 }
             },
             ActionItem {
@@ -86,7 +91,7 @@ NavigationPane {
                     progressDialog.body = "See results using Target File System Navigator"
                     progressDialog.show()
                     app.convertXMLtoJSONAddresses()
-                    progressDialog.cancel()
+                    navPane.cancelProgress()
                 }
             },
             ActionItem {
@@ -96,7 +101,7 @@ NavigationPane {
                     progressDialog.body = "See results using Target File System Navigator"
                     progressDialog.show()
                     app.convertJSONtoXMLAddresses()
-                    progressDialog.cancel()
+                    navPane.cancelProgress()
                 }
             },
             ActionItem {
@@ -104,9 +109,9 @@ NavigationPane {
                 imageSource: "asset:///images/stop_watch.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
                 onTriggered: {
-                    progressDialog.body = "Read/Write 10'000 Addresses. Can take up to 2 Min"
+                    progressDialog.body = "Read/Write 10'000 Addresses: up to 2 Min"
                 	progressDialog.show()
-                    app.compareJSONandXML()
+                    app.compareJSONandXMLaddresses()
                 }
             },
             ActionItem {
@@ -114,6 +119,10 @@ NavigationPane {
                 imageSource: "asset:///images/speaker.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
                 onTriggered: {
+                    var page = measureSpeakerPageComponent.createObject(navPane)
+                    navPane.push(page)
+                    progressDialog.body = "Read/Write/Convert 119 Speakers"
+                    progressDialog.show()
                     app.compareJSONandXMLspeaker()
                 }
             }
@@ -158,34 +167,34 @@ NavigationPane {
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorJSON
+                    textStyle.color: navPane.colorJSON
                 }
                 Label {
                     text: "XML"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorXML
+                    textStyle.color: navPane.colorXML
                 }
                 Label {
                     text: "JSON"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorJSON
+                    textStyle.color: navPane.colorJSON
                 }
                 Label {
                     text: "XML"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorXML
+                    textStyle.color: navPane.colorXML
                 }
             } // end labelTopContainer
             Container {
                 id: valueContainer
                 topPadding: 10
-                preferredHeight: myPage.barHeight
+                preferredHeight: measureAddressesPage.barHeight
                 layout: StackLayout {
                     orientation: LayoutOrientation.LeftToRight
                 }
@@ -193,14 +202,14 @@ NavigationPane {
                     LayoutUpdateHandler {
                         id: valueContainerLayoutHandler
                         onLayoutFrameChanged: {
-                            myPage.barHeight = layoutFrame.height
-                            console.log("BAR HEIGHT: "+myPage.barHeight)
+                            measureAddressesPage.barHeight = layoutFrame.height
+                            console.log("BAR HEIGHT: "+measureAddressesPage.barHeight)
                         }
                     }
                 ]
                 Container {
                     id: readJSONValue
-                    background: myPage.colorJSON
+                    background: navPane.colorJSON
                     rightMargin: 6
                     preferredHeight: 1
                     layoutProperties: StackLayoutProperties {
@@ -210,7 +219,7 @@ NavigationPane {
                 }
                 Container {
                     id: readXMLValue
-                    background: myPage.colorXML
+                    background: navPane.colorXML
                     rightMargin: 6
                     preferredHeight: 1
                     layoutProperties: StackLayoutProperties {
@@ -220,7 +229,7 @@ NavigationPane {
                 }
                 Container {
                     id: writeJSONValue
-                    background: myPage.colorJSON
+                    background: navPane.colorJSON
                     rightMargin: 6
                     preferredHeight: 1
                     layoutProperties: StackLayoutProperties {
@@ -230,7 +239,7 @@ NavigationPane {
                 }
                 Container {
                     id: writeXMLNValue
-                    background: myPage.colorXML
+                    background: navPane.colorXML
                     rightMargin: 6
                     preferredHeight: 1
                     layoutProperties: StackLayoutProperties {
@@ -251,7 +260,7 @@ NavigationPane {
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorJSON
+                    textStyle.color: navPane.colorJSON
                     textStyle.fontSize: FontSize.Small
                 }
                 Label {
@@ -260,7 +269,7 @@ NavigationPane {
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorXML
+                    textStyle.color: navPane.colorXML
                     textStyle.fontSize: FontSize.Small
                 }
                 Label {
@@ -269,7 +278,7 @@ NavigationPane {
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorJSON
+                    textStyle.color: navPane.colorJSON
                     textStyle.fontSize: FontSize.Small
                 }
                 Label {
@@ -278,7 +287,7 @@ NavigationPane {
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
-                    textStyle.color: myPage.colorXML
+                    textStyle.color: navPane.colorXML
                     textStyle.fontSize: FontSize.Small
                 }
             } // end labelBottomContainer
@@ -286,16 +295,15 @@ NavigationPane {
         // slot connected to signal from C++
         function compareValues(max, readJson, writeJson, readXml, writeXml) {
             // we store all the values as Page properties
-            myPage.max = max
-            myPage.readJson = readJson
-            myPage.writeJson = writeJson
-            myPage.readXml = readXml
-            myPage.writeXml = writeXml
+            measureAddressesPage.max = max
+            measureAddressesPage.readJson = readJson
+            measureAddressesPage.writeJson = writeJson
+            measureAddressesPage.readXml = readXml
+            measureAddressesPage.writeXml = writeXml
             // now calculate the height of the Containers representing a Bar
             calculateBarChart()
-            progressDialog.cancel()
+            navPane.cancelProgress()
         }
-
         function calculateBarChart(){
             readJSONValue.preferredHeight = barHeight / max * readJson
             writeJSONValue.preferredHeight = barHeight / max * writeJson
@@ -308,8 +316,14 @@ NavigationPane {
         }
         onCreationCompleted: {
             // connect the signal from C++ with the QML function
-            app.speedTest.connect(compareValues)
+            app.speedTestAddresses.connect(compareValues)
         }
     }    // end page
-
+    // cancels the progress, also called from pushed Page
+    function cancelProgress(){
+        progressDialog.cancel()
+    }
+    onPopTransitionEnded: {
+        page.destroy()
+    }
 }// end navPane

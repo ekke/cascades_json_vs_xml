@@ -24,7 +24,6 @@
 #include <bb/data/JsonDataAccess>
 #include <bb/data/XmlDataAccess>
 
-
 static QString dataPath(const QString& fileName) {
 	return QDir::currentPath() + "/data/" + fileName;
 }
@@ -113,10 +112,15 @@ void ApplicationUI::compareJSONandXMLspeaker() {
 	dataFile3.open(QIODevice::ReadOnly);
 	data = jda.loadFromBuffer(dataFile3.readAll());
 	int elapsed3 = time.elapsed();
-	qDebug() << "1: READ JSON " << elapsed1 << " 2: READ XML " << elapsed2 << " 3: READ JSON converted " << elapsed3;
+	qDebug() << "1: READ JSON " << elapsed1 << " 2: READ XML " << elapsed2
+			<< " 3: READ JSON converted " << elapsed3;
+	int maxValue;
+	maxValue = std::max(elapsed1, elapsed2);
+	maxValue = std::max(maxValue, elapsed3);
+	emit speedTestSpeaker(maxValue, elapsed2, elapsed1, elapsed3);
 }
 
-void ApplicationUI::compareJSONandXML() {
+void ApplicationUI::compareJSONandXMLaddresses() {
 	// attention: no checks done if file exists, could be read or written
 	JsonDataAccess jda;
 	QVariant data;
@@ -157,7 +161,7 @@ void ApplicationUI::compareJSONandXML() {
 	maxValue = std::max(elapsed1, elapsed2);
 	maxValue = std::max(maxValue, elapsed3);
 	maxValue = std::max(maxValue, elapsed4);
-	emit speedTest(maxValue,elapsed1,elapsed2, elapsed3, elapsed4);
+	emit speedTestAddresses(maxValue, elapsed1, elapsed2, elapsed3, elapsed4);
 }
 
 void ApplicationUI::convertJSONtoXMLAddresses() {
