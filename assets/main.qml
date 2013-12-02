@@ -150,7 +150,6 @@ NavigationPane {
                 }
             },
             ActionItem {
-                id: me
                 title: "Measure Addresses"
                 enabled: ! navPane.running
                 imageSource: "asset:///images/stop_watch.png"
