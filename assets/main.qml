@@ -23,8 +23,9 @@ NavigationPane {
     // color - creation is expensive
     // so colors should be re-used
     property variant colorJSON: Color.DarkGreen
-    property variant colorJSONc: Color.Magenta
+    property variant colorJSONc: Color.DarkMagenta
     property variant colorXML: Color.Red
+    property variant colorSQL: Color.Magenta
     property bool running: false
     attachedObjects: [
         SystemToast {
@@ -37,6 +38,10 @@ NavigationPane {
         ComponentDefinition {
             id: measureSpeakerPageComponent
             source: "MeasureSpeakerPage.qml"
+        },
+        ComponentDefinition {
+            id: speakerSQLPageComponent
+            source: "SpeakerSQLPage.qml"
         },
         QTimer {
             id: myTimer
@@ -60,6 +65,8 @@ NavigationPane {
                     case 4:
                         app.convertJSONtoXMLAddresses()
                         return
+                    case 5:
+                        app.compareJSONandSQLspeakers()
                     default:
                         return
                 }
@@ -83,8 +90,10 @@ NavigationPane {
         property int writeJson: 0
         property int readXml: 0
         property int writeXml: 0
+        property int readSQL: 0
+        property int writeSQL:0
         titleBar: TitleBar {
-            title: "Speed Test JSON vs XML (Addresses)"
+            title: "Speed Test JSON | XML | SQL (Addresses)"
             // we want to see the value bars withour scrolling on Q10
             // so we have to set the title bar sticky
             scrollBehavior: TitleBarScrollBehavior.Sticky
@@ -150,7 +159,7 @@ NavigationPane {
                 }
             },
             ActionItem {
-                title: "Measure Addresses"
+                title: "Addresses"
                 enabled: ! navPane.running
                 imageSource: "asset:///images/stop_watch.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
@@ -166,7 +175,7 @@ NavigationPane {
                 }
             },
             ActionItem {
-                title: "Measure Speaker"
+                title: "Speaker"
                 enabled: ! navPane.running
                 imageSource: "asset:///images/speaker.png"
                 ActionBar.placement: ActionBarPlacement.OnBar
@@ -212,7 +221,7 @@ NavigationPane {
                 }
                 Label {
                     // in a real world application all Strings should be translated
-                    text: "Read"
+                    text: "Read (ms)"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
@@ -220,7 +229,7 @@ NavigationPane {
                     textStyle.fontWeight: FontWeight.Bold
                 }
                 Label {
-                    text: "Write"
+                    text: "Write (ms)"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
                     }
@@ -248,6 +257,13 @@ NavigationPane {
                     textStyle.color: navPane.colorXML
                 }
                 Label {
+                    text: "SQL"
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    textStyle.color: navPane.colorSQL
+                }
+                Label {
                     text: "JSON"
                     layoutProperties: StackLayoutProperties {
                         spaceQuota: 1
@@ -260,6 +276,13 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: navPane.colorXML
+                }
+                Label {
+                    text: "SQL"
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    textStyle.color: navPane.colorSQL
                 }
             } // end labelTopContainer
             Container {
@@ -299,6 +322,16 @@ NavigationPane {
                     verticalAlignment: VerticalAlignment.Bottom
                 }
                 Container {
+                    id: readSQLValue
+                    background: navPane.colorSQL
+                    rightMargin: 6
+                    preferredHeight: 1
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    verticalAlignment: VerticalAlignment.Bottom
+                }
+                Container {
                     id: writeJSONValue
                     background: navPane.colorJSON
                     rightMargin: 6
@@ -309,8 +342,18 @@ NavigationPane {
                     verticalAlignment: VerticalAlignment.Bottom
                 }
                 Container {
-                    id: writeXMLNValue
+                    id: writeXMLValue
                     background: navPane.colorXML
+                    rightMargin: 6
+                    preferredHeight: 1
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    verticalAlignment: VerticalAlignment.Bottom
+                }
+                Container {
+                    id: writeSQLValue
+                    background: navPane.colorSQL
                     rightMargin: 6
                     preferredHeight: 1
                     layoutProperties: StackLayoutProperties {
@@ -332,7 +375,7 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: navPane.colorJSON
-                    textStyle.fontSize: FontSize.Small
+                    textStyle.fontSize: FontSize.XSmall
                 }
                 Label {
                     id: readXmlValueLabel
@@ -341,7 +384,16 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: navPane.colorXML
-                    textStyle.fontSize: FontSize.Small
+                    textStyle.fontSize: FontSize.XSmall
+                }
+                Label {
+                    id: readSQLValueLabel
+                    text: "0"
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    textStyle.color: navPane.colorSQL
+                    textStyle.fontSize: FontSize.XSmall
                 }
                 Label {
                     id: writeJsonValueLabel
@@ -350,7 +402,7 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: navPane.colorJSON
-                    textStyle.fontSize: FontSize.Small
+                    textStyle.fontSize: FontSize.XSmall
                 }
                 Label {
                     id: writeXmlValueLabel
@@ -359,18 +411,29 @@ NavigationPane {
                         spaceQuota: 1
                     }
                     textStyle.color: navPane.colorXML
-                    textStyle.fontSize: FontSize.Small
+                    textStyle.fontSize: FontSize.XSmall
+                }
+                Label {
+                    id: writeSQLValueLabel
+                    text: "0"
+                    layoutProperties: StackLayoutProperties {
+                        spaceQuota: 1
+                    }
+                    textStyle.color: navPane.colorSQL
+                    textStyle.fontSize: FontSize.XSmall
                 }
             } // end labelBottomContainer
         } // outerContainer
         // slot connected to signal from C++
-        function compareValues(max, readJson, writeJson, readXml, writeXml) {
+        function compareValues(max, readJson, writeJson, readXml, writeXml, readSQL, writeSQL) {
             // we store all the values as Page properties
             measureAddressesPage.max = max
             measureAddressesPage.readJson = readJson
             measureAddressesPage.writeJson = writeJson
             measureAddressesPage.readXml = readXml
             measureAddressesPage.writeXml = writeXml
+            measureAddressesPage.readSQL = readSQL
+            measureAddressesPage.writeSQL = writeSQL
             // now calculate the height of the Containers representing a Bar
             calculateBarChart()
             navPane.processFinished()
@@ -379,11 +442,15 @@ NavigationPane {
             readJSONValue.preferredHeight = barHeight / max * readJson
             writeJSONValue.preferredHeight = barHeight / max * writeJson
             readXMLValue.preferredHeight = barHeight / max * readXml
-            writeXMLNValue.preferredHeight = barHeight / max * writeXml
-            readJsonValueLabel.text = readJson + " ms"
-            writeJsonValueLabel.text = writeJson + " ms"
-            readXmlValueLabel.text = readXml + " ms"
-            writeXmlValueLabel.text = writeXml + " ms"
+            writeXMLValue.preferredHeight = barHeight / max * writeXml
+            readSQLValue.preferredHeight = barHeight / max * readSQL
+            writeSQLValue.preferredHeight = barHeight / max * writeSQL     
+            readJsonValueLabel.text = readJson
+            writeJsonValueLabel.text = writeJson
+            readXmlValueLabel.text = readXml
+            writeXmlValueLabel.text = writeXml
+            readSQLValueLabel.text = readSQL
+            writeSQLValueLabel.text = writeSQL
         }
         onCreationCompleted: {
             // connect the signal from C++ with the QML function
@@ -397,13 +464,13 @@ NavigationPane {
         navPane.running = false
         switch (myTimer.usecase) {
             case 0:
-                infoToast.body = "10'000 Addresses processed.\nread JSON up to 30 times faster then read XML"
+                infoToast.body = "10'000 Addresses processed."
                 infoToast.button.label = "OK"
                 infoToast.icon = "asset:///images/ca_done.png"
                 infoToast.exec()
                 return
             case 1:
-                infoToast.body = "119 Speaker processed.\nJSON v2:\nelements not needed -> removed"
+                infoToast.body = "119 Speaker processed.\nJSON v2:\noptimized for JSON"
                 infoToast.button.label = "OK"
                 infoToast.icon = "asset:///images/ca_done.png"
                 infoToast.exec()
@@ -435,6 +502,18 @@ NavigationPane {
     }
     onPopTransitionEnded: {
         page.destroy()
+    }
+    function pushSpeakerSQL(){
+        navPane.running = true
+        var page = speakerSQLPageComponent.createObject(navPane)
+        navPane.push(page)
+        infoToast.body = "SELECT/INSERT 119 Speakers"
+        infoToast.button.label = "Please Wait ..."
+        infoToast.icon = "asset:///images/ca_software_updates.png"
+        infoToast.show()
+        myTimer.usecase = 5
+        activityIndicator.start()
+        myTimer.start()
     }
     onCreationCompleted: {
         app.conversionDone.connect(processFinished)

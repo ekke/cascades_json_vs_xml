@@ -18,14 +18,13 @@
 #define ApplicationUI_HPP_
 
 #include <QObject>
+#include <bb/data/SqlDataAccess>
 
-namespace bb
-{
-    namespace cascades
-    {
-        class Application;
-        class LocaleHandler;
-    }
+namespace bb {
+namespace cascades {
+class Application;
+class LocaleHandler;
+}
 }
 
 class QTranslator;
@@ -36,40 +35,60 @@ class QTranslator;
  *
  */
 
-class ApplicationUI : public QObject
-{
-    Q_OBJECT
+class ApplicationUI: public QObject {
+	Q_OBJECT
 public:
-    ApplicationUI(bb::cascades::Application *app);
+	ApplicationUI(bb::cascades::Application *app);
 
-    Q_INVOKABLE
-    void convertXMLtoJSONspeaker();
+	Q_INVOKABLE
+	void compareJSONandSQLspeakers();
 
-    Q_INVOKABLE
+	Q_INVOKABLE
+	void convertXMLtoJSONspeaker();
+
+	Q_INVOKABLE
 	void convertXMLtoJSONAddresses();
 
-    Q_INVOKABLE
+	Q_INVOKABLE
 	void convertJSONtoXMLAddresses();
 
-    Q_INVOKABLE
-    void compareJSONandXMLaddresses();
+	Q_INVOKABLE
+	void compareJSONandXMLaddresses();
 
-    Q_INVOKABLE
+	Q_INVOKABLE
 	void compareJSONandXMLspeaker();
 
-    virtual ~ApplicationUI() { }
+	virtual ~ApplicationUI() {
+	}
 signals:
-	void speedTestAddresses(int max, int readJson, int writeJson, int readXml, int writeXml);
+	void speedTestAddresses(int max, int readJson, int writeJson, int readXml, int writeXml, int readSQL, int writeSQL);
+	void speedTestSpeakerSQL(int max, int readJson, int writeJson, int readSQL, int writeSQL);
 	void speedTestSpeaker(int max, int readXml, int readJson, int readConvertedJson);
 	void conversionDone();
+
 private slots:
-    void onSystemLanguageChanged();
+	void onSystemLanguageChanged();
 
 private:
-    QTranslator* m_pTranslator;
-    bb::cascades::LocaleHandler* m_pLocaleHandler;
+	QTranslator* m_pTranslator;
+	bb::cascades::LocaleHandler* m_pLocaleHandler;
 
-    void convertSpeaker(QVariant& data);
+	void convertSpeaker(QVariant& data);
+
+	// S Q L
+	bool mDatabaseAvailable;
+	bool initDatabase();
+	bb::data::SqlDataAccess* mSQLda;
+	void firstInitSqliteAddresses();
+	void firstInitSqliteSpeakers();
+	QList<int> readWriteSQLaddresses();
+	QList<int> readWriteSQLspeakers();
+	QString createTableCommandForAddresses(const QVariantMap& addressMap);
+	QString createTableCommandForSpeakers(const QVariantMap& speakerMap);
+	QString createParameterizedInsertCommand(const QVariantMap& addressMap,
+			const QString& tableName);
+	void createAndInsertAddressesFromList(const QVariantList& allAddresses);
+	void createAndInsertSpeakersFromList(const QVariantList& allSpeakers);
 };
 
 #endif /* ApplicationUI_HPP_ */

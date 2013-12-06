@@ -1,23 +1,24 @@
 import bb.cascades 1.2
 
 Page {
-    id: measureSpeakerPage
+    id: speakerSQLPage
     // we start with a high value to let Cascades adjust this via LayoutUpdateHandler
     property int barHeight: 1200
     onBarHeightChanged: {
         // if the available height changes we have to recalculate
         // if there are already values
-        if(max > 0){
+        if (max > 0) {
             calculateBarChart()
         }
     }
     // store the last values to be able to re-calculate the height of bars if available space changes
     property int max: -1
     property int readJson: 0
-    property int readXml: 0
-    property int readConvertedJson: 0
+    property int writeJson: 0
+    property int readSQL: 0
+    property int writeSQL:0
     titleBar: TitleBar {
-        title: "Speed Test JSON vs XML (Speaker)"
+        title: "Speed Test JSON | SQL (Speaker)"
         // we want to see the value bars withour scrolling on Q10
         // so we have to set the title bar sticky
         scrollBehavior: TitleBarScrollBehavior.Sticky
@@ -25,7 +26,7 @@ Page {
     attachedObjects: [
         OrientationHandler {
             onOrientationChanged: {
-                if (orientation == UIOrientation.Portrait){
+                if (orientation == UIOrientation.Portrait) {
                     // setting the preffered height to a high number
                     // will cause the LayoutUpdateHandler to change the height
                     // if coming from Landscape
@@ -36,17 +37,6 @@ Page {
             }
         }
     ]
-    actions: [
-        ActionItem {
-            title: "Speaker SQL"
-            enabled: ! navPane.running
-            imageSource: "asset:///images/server.png"
-            ActionBar.placement: ActionBarPlacement.OnBar
-            onTriggered: {
-                navPane.pushSpeakerSQL()
-            }
-        }
-    ]
     Container {
         id: outerContainer
         leftPadding: 40
@@ -54,6 +44,20 @@ Page {
         layout: StackLayout {
             orientation: LayoutOrientation.TopToBottom
         }
+        ActivityIndicator {
+            id: activityIndicator
+        }
+        attachedObjects: [
+            LayoutUpdateHandler {
+                id: outerContainerLayoutHandler
+                onLayoutFrameChanged: {
+                    // this will trigger the valueContainerLayoutHandler
+                    // to get all available space
+                    // per ex. after stopping the ActivityIndicator 
+                    valueContainer.preferredHeight = 1200
+                }
+            }
+        ]
         Container {
             id: labelHeaderContainer
             layout: StackLayout {
@@ -61,7 +65,15 @@ Page {
             }
             Label {
                 // in a real world application all Strings should be translated
-                text: "Read"
+                text: "Read (ms)"
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                horizontalAlignment: HorizontalAlignment.Center
+                textStyle.fontWeight: FontWeight.Bold
+            }
+            Label {
+                text: "Write (ms)"
                 layoutProperties: StackLayoutProperties {
                     spaceQuota: 1
                 }
@@ -75,11 +87,18 @@ Page {
                 orientation: LayoutOrientation.LeftToRight
             }
             Label {
-                text: "XML"
+                text: "JSON"
                 layoutProperties: StackLayoutProperties {
                     spaceQuota: 1
                 }
-                textStyle.color: navPane.colorXML
+                textStyle.color: navPane.colorJSON
+            }
+            Label {
+                text: "SQL"
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                textStyle.color: navPane.colorSQL
             }
             Label {
                 text: "JSON"
@@ -89,17 +108,17 @@ Page {
                 textStyle.color: navPane.colorJSON
             }
             Label {
-                text: "JSON v2"
+                text: "SQL"
                 layoutProperties: StackLayoutProperties {
                     spaceQuota: 1
                 }
-                textStyle.color: navPane.colorJSONc
+                textStyle.color: navPane.colorSQL
             }
         } // end labelTopContainer
         Container {
             id: valueContainer
             topPadding: 10
-            preferredHeight: measureSpeakerPage.barHeight
+            preferredHeight: speakerSQLPage.barHeight
             layout: StackLayout {
                 orientation: LayoutOrientation.LeftToRight
             }
@@ -107,21 +126,10 @@ Page {
                 LayoutUpdateHandler {
                     id: valueContainerLayoutHandler
                     onLayoutFrameChanged: {
-                        measureSpeakerPage.barHeight = layoutFrame.height
-                        console.log("BAR HEIGHT: "+measureSpeakerPage.barHeight)
+                        speakerSQLPage.barHeight = layoutFrame.height
                     }
                 }
             ]
-            Container {
-                id: readXMLValue
-                background: navPane.colorXML
-                rightMargin: 6
-                preferredHeight: 1
-                layoutProperties: StackLayoutProperties {
-                    spaceQuota: 1
-                }
-                verticalAlignment: VerticalAlignment.Bottom
-            }
             Container {
                 id: readJSONValue
                 background: navPane.colorJSON
@@ -133,8 +141,28 @@ Page {
                 verticalAlignment: VerticalAlignment.Bottom
             }
             Container {
-                id: readJSONconvertedValue
-                background: navPane.colorJSONc
+                id: readSQLValue
+                background: navPane.colorSQL
+                rightMargin: 6
+                preferredHeight: 1
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                verticalAlignment: VerticalAlignment.Bottom
+            }
+            Container {
+                id: writeJSONValue
+                background: navPane.colorJSON
+                rightMargin: 6
+                preferredHeight: 1
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                verticalAlignment: VerticalAlignment.Bottom
+            }
+            Container {
+                id: writeSQLValue
+                background: navPane.colorSQL
                 rightMargin: 6
                 preferredHeight: 1
                 layoutProperties: StackLayoutProperties {
@@ -150,57 +178,67 @@ Page {
             }
             bottomPadding: 10
             Label {
-                id: readXmlValueLabel
-                text: "0"
-                layoutProperties: StackLayoutProperties {
-                    spaceQuota: 1
-                }
-                textStyle.color: navPane.colorXML
-                textStyle.fontSize: FontSize.Small
-            }
-            Label {
                 id: readJsonValueLabel
                 text: "0"
                 layoutProperties: StackLayoutProperties {
                     spaceQuota: 1
                 }
                 textStyle.color: navPane.colorJSON
-                textStyle.fontSize: FontSize.Small
+                textStyle.fontSize: FontSize.XSmall
             }
             Label {
-                id: readJsonConvertedValueLabel
+                id: readSQLValueLabel
                 text: "0"
                 layoutProperties: StackLayoutProperties {
                     spaceQuota: 1
                 }
-                textStyle.color: navPane.colorJSONc
-                textStyle.fontSize: FontSize.Small
+                textStyle.color: navPane.colorSQL
+                textStyle.fontSize: FontSize.XSmall
+            }
+            Label {
+                id: writeJsonValueLabel
+                text: "0"
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                textStyle.color: navPane.colorJSON
+                textStyle.fontSize: FontSize.XSmall
+            }
+            Label {
+                id: writeSQLValueLabel
+                text: "0"
+                layoutProperties: StackLayoutProperties {
+                    spaceQuota: 1
+                }
+                textStyle.color: navPane.colorSQL
+                textStyle.fontSize: FontSize.XSmall
             }
         } // end labelBottomContainer
     } // outerContainer
     // slot connected to signal from C++
-    function compareValues(max, readXML, readJson, readConvertedJson) {
+    function compareValues(max, readJson, writeJson, readSQL, writeSQL) {
         // we store all the values as Page properties
-        measureSpeakerPage.max = max
-        measureSpeakerPage.readJson = readJson
-        measureSpeakerPage.readXml = readXML
-        measureSpeakerPage.readConvertedJson = readConvertedJson
+        speakerSQLPage.max = max
+        speakerSQLPage.readJson = readJson
+        speakerSQLPage.writeJson = writeJson
+        speakerSQLPage.readSQL = readSQL
+        speakerSQLPage.writeSQL = writeSQL
         // now calculate the height of the Containers representing a Bar
         calculateBarChart()
         navPane.processFinished()
     }
-    
-    function calculateBarChart(){
+    function calculateBarChart() {
         readJSONValue.preferredHeight = barHeight / max * readJson
-        readXMLValue.preferredHeight = barHeight / max * readXml
-        readJSONconvertedValue.preferredHeight = barHeight / max * readConvertedJson
-        readJsonValueLabel.text = readJson + " ms"
-        readXmlValueLabel.text = readXml + " ms"
-        readJsonConvertedValueLabel.text = readConvertedJson + " ms"
+        writeJSONValue.preferredHeight = barHeight / max * writeJson
+        readSQLValue.preferredHeight = barHeight / max * readSQL
+        writeSQLValue.preferredHeight = barHeight / max * writeSQL     
+        readJsonValueLabel.text = readJson
+        writeJsonValueLabel.text = writeJson
+        readSQLValueLabel.text = readSQL
+        writeSQLValueLabel.text = writeSQL
     }
     onCreationCompleted: {
         // connect the signal from C++ with the QML function
-        app.speedTestSpeaker.connect(compareValues)
+        app.speedTestSpeakerSQL.connect(compareValues)
     }
-
 }

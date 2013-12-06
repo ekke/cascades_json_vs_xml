@@ -1,6 +1,9 @@
 cascades_json_vs_xml
 ====================
 
+2013-12-06: modified: devs at Native Forum asked me to compare with SQLite, too
+so I've enhanced the sample (bolg / documentation will follow soon)
+
 Cascades Sample: JSON vs XML
 
 This is the Github Project to mny blog
