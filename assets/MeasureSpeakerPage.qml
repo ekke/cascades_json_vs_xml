@@ -198,6 +198,11 @@ Page {
         readXmlValueLabel.text = readXml + " ms"
         readJsonConvertedValueLabel.text = readConvertedJson + " ms"
     }
+    // called from NavigationPane onPopTransitionEnded
+    function cleanup(){
+        // disconnect the signal from C++ with the QML function
+        app.speedTestSpeaker.disconnect(compareValues)
+    }
     onCreationCompleted: {
         // connect the signal from C++ with the QML function
         app.speedTestSpeaker.connect(compareValues)

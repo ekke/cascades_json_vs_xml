@@ -501,6 +501,7 @@ NavigationPane {
         }
     }
     onPopTransitionEnded: {
+        page.cleanup()
         page.destroy()
     }
     function pushSpeakerSQL(){

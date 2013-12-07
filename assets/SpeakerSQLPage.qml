@@ -237,6 +237,11 @@ Page {
         readSQLValueLabel.text = readSQL
         writeSQLValueLabel.text = writeSQL
     }
+    // called from NavigationPane onPopTransitionEnded
+    function cleanup(){
+        // disconnect the signal from C++ with the QML function
+        app.speedTestSpeakerSQL.disconnect(compareValues)
+    }
     onCreationCompleted: {
         // connect the signal from C++ with the QML function
         app.speedTestSpeakerSQL.connect(compareValues)
