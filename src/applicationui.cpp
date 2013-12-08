@@ -387,6 +387,16 @@ QList<int> ApplicationUI::readWriteSQLaddresses() {
 	// qDebug() << "READ from SQL count: " << count;
 	int timeToReadFromTable = time.elapsed();
 
+	// tried if using a Transaction makes it faster
+	result.clear();
+	time.start();
+	mSQLda->connection().transaction();
+	result = mSQLda->execute(sqlQuery);
+	mSQLda->connection().commit();
+	int timeToReadFromTableWithTx = time.elapsed();
+	// execution times are similar, sometimes without tx faster
+	qDebug() << "READ with TX: " << timeToReadFromTableWithTx << " without: " << timeToReadFromTable;
+
 	// WRITE back to SQL
 	// now to write all data from QVariantList back into SQL:
 	// 1. DROP the existing TABLE
